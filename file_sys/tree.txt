@@ -1,0 +1,17 @@
+1 root
+2 bin
+0 
+5 a.sh
+3 user
+0 
+6 b.sh
+7 Desktop
+4 user2
+0
+0
+0
+0
+8 Document
+0
+0 
+0
