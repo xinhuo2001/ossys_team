@@ -7,6 +7,8 @@
         "iosfwd": "cpp",
         "fstream": "cpp",
         "ostream": "cpp",
-        "iostream": "cpp"
+        "iostream": "cpp",
+        "vector": "cpp",
+        "xutility": "cpp"
     }
 }

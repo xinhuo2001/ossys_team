@@ -2,9 +2,8 @@
 
 FileSystem::FileSystem()
 {
-    cout << "init" << endl;
     init();
-    cout << "init end" << endl;
+    this->curFCB = root;
 }
 
 FileSystem::~FileSystem()
@@ -25,7 +24,7 @@ void FileSystem::init()
     string rname;
     tree >> rnum >> rname;
     root = new FCB(rname);
-
+    root->setParent(nullptr);
     //层序遍历使用队列
     queue<FCB*> myQueue;
     myQueue.push(root);
@@ -49,6 +48,7 @@ void FileSystem::init()
             tree >> filename;
             fcb_child = new FCB(filename);
             myQueue.push(fcb_child);
+            fcb_child->parent = cur;
         }
         //兄弟
         tree >> num;
@@ -57,6 +57,7 @@ void FileSystem::init()
             tree >> filename;
             fcb_simbling = new FCB(filename);
             myQueue.push(fcb_simbling);
+            fcb_simbling->parent = cur;
         }
         //入栈
         cur->setChild(fcb_child);
@@ -100,6 +101,70 @@ void FileSystem::showTree()
     }
 }
 
+void FileSystem::updateTreeFile()
+{
+    string tfname = "a.txt";
+    // string tfname = TreeFileName;
+    //层序遍历
+    fstream fc;
+    fc.open(tfname,ios::out | ios::trunc);
+    if(!fc.is_open()) {
+        cout << "open " << tfname << " error" << endl;
+        exit(-1);
+    }
+    queue<FCB*> myQueue;
+    string rootInfo = "";
+    int count = 1;
+    //写入根节点数据
+    rootInfo += this->num2string(count++);
+    rootInfo += " ";
+    rootInfo += root->name;
+    fc << rootInfo << endl;
+
+    myQueue.push(root);
+    while(!myQueue.empty()) {
+        auto tem = myQueue.front();
+        myQueue.pop();
+        string temInfo = "";
+        //只写入tem 子节点
+        //左子孩子
+        auto tem_child = tem->child;
+        if(tem_child != nullptr) {
+            temInfo += num2string(count++);
+            temInfo += " ";
+            temInfo += tem_child->name;
+            myQueue.push(tem_child);
+        } else {
+            temInfo += "0 ";
+        }
+        fc << temInfo << endl;
+        temInfo.clear();
+        //右子兄弟
+        auto tem_sibling = tem->sibling;
+        if(tem_sibling != nullptr) {
+            temInfo += num2string(count++);
+            temInfo += " ";
+            temInfo += tem_sibling->name;
+            myQueue.push(tem_sibling);
+        } else {
+            temInfo += "0 ";
+        }
+        fc << temInfo << endl;
+    }
+}
+
+string FileSystem::num2string(int num)
+{
+    string ret = "";
+    while(num != 0) {
+        ret += (char)(num%10 + '0');
+        num = num/10;
+    }
+    reverse(ret.begin(), ret.end());
+    // cout << "ret:" << ret << endl;
+    return ret;
+}
+
 void FileSystem::Tree(FCB* cur, int depth)
 {
     if(cur != nullptr) {
@@ -126,6 +191,34 @@ void FileSystem::Ls(FCB* cur)
     }
 }
 
+void FileSystem::Pwd(FCB* cur)
+{
+    vector<string> path;
+    auto tem = cur;
+    //找到长子 即自己是父亲的左子
+    while(tem != nullptr && tem->parent != nullptr) {
+        if(tem == tem->parent->child) {
+            path.push_back(tem->parent->name);
+        }
+        tem = tem->parent;
+    }
+    reverse(path.begin(), path.end());
+    for(int i = 0; i < path.size(); i++) {
+        cout << path[i] << "/";
+    }
+    cout << endl;
+}
+
+
+
+
+
+
+
+
+
+
+
 void FileSystem::preOrder(FCB* cur)
 {
     if(cur != nullptr) {
@@ -139,11 +232,19 @@ void FileSystem::preOrder(FCB* cur)
 
 void FileSystem::test()
 {
-    cout << "---------------------------" << endl;    
+    cout << endl << "---------------------------" << endl;    
     cout << "tree 根目录" << endl;
     Tree(root,0);
-    cout << "---------------------------" << endl;    
+    cout << endl << "---------------------------" << endl;    
     cout << "ls 根目录" << endl;
     Ls(root);
-    cout << "---------------------------" << endl;
+    cout << endl << "---------------------------" << endl;    
+    cout << "pwd 某节点" << endl;
+    auto pwd_fcb = root->child->sibling->child;
+    cout << "file:" << pwd_fcb->name << endl;
+    Pwd(pwd_fcb);
+    cout << endl << "---------------------------" << endl;    
+    cout << "写入 目录" << endl;
+    updateTreeFile();
+    cout << endl << "---------------------------" << endl;    
 }
