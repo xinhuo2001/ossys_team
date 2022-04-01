@@ -5,6 +5,8 @@
         "*.wxs": "javascript",
         "xstring": "cpp",
         "iosfwd": "cpp",
-        "fstream": "cpp"
+        "fstream": "cpp",
+        "ostream": "cpp",
+        "iostream": "cpp"
     }
 }

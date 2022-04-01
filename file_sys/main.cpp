@@ -2,6 +2,6 @@
 
 int main() {
     FileSystem fs;
-    fs.showTree();
+    fs.test();
     return 0;
 }

@@ -13,6 +13,15 @@ FCB::FCB(char type, const string& name, int size, FCB* parent, FCB* child, FCB* 
 FCB::FCB(const string& name)
 {
     this->name = name;
+    this->child = nullptr;
+    this->sibling = nullptr;
+}
+
+void FCB::showSelf()
+{
+    string ret = "";
+    ret += this->name;
+    cout << ret << endl;
 }
 
 void FCB::setParent(FCB* parent)

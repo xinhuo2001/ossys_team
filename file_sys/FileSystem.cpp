@@ -99,3 +99,51 @@ void FileSystem::showTree()
         }
     }
 }
+
+void FileSystem::Tree(FCB* cur, int depth)
+{
+    if(cur != nullptr) {
+        for(int j = 0; j < depth; j++) {
+            if(j == depth - 1) {
+                cout << "|_______";
+            } else {
+                cout << "        ";
+            }
+        }
+        cout << cur->name << endl;
+        Tree(cur->child,depth+1);
+        Tree(cur->sibling,depth);
+    }
+}
+
+void FileSystem::Ls(FCB* cur)
+{
+    //展示cur的左子和左子的右子(递进)
+    auto tem = cur->child;
+    while(tem != nullptr) {
+        tem->showSelf();
+        tem = tem->sibling;
+    }
+}
+
+void FileSystem::preOrder(FCB* cur)
+{
+    if(cur != nullptr) {
+        cout << cur->name << endl;
+        preOrder(cur->child);
+        preOrder(cur->sibling);
+    } else {
+        cout << "null" << endl;
+    }
+}
+
+void FileSystem::test()
+{
+    cout << "---------------------------" << endl;    
+    cout << "tree 根目录" << endl;
+    Tree(root,0);
+    cout << "---------------------------" << endl;    
+    cout << "ls 根目录" << endl;
+    Ls(root);
+    cout << "---------------------------" << endl;
+}

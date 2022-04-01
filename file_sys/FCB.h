@@ -19,7 +19,8 @@ public:
 public:
     FCB(char type, const string& name, int size, FCB* parent, FCB* child, FCB* sibling);
 	FCB(const string& name);
-
+	//展示模块信息
+	void showSelf();
 public:
 	void setParent(FCB* parent);
 	void setChild(FCB* child);
