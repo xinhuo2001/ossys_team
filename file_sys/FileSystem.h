@@ -32,6 +32,8 @@ public:
     bool isExistDir(const string& dirname);
     //在当前目录下添加节点
     void addNode(FCB* curNode, FCB* newNode);
+    //在当前目录寻找某文件
+    FCB* findFile(FCB* curNode, const string& name);
 // 功能模块
 public:
     //实现tree功能 先序遍历 展示cur树的情况
@@ -44,6 +46,8 @@ public:
     void Touch(const string& fileName,int size);
     //在当前目录创建目录
     void Mkdir(const string& dirName);
+    //删除文件
+    void Rm(const string& fileName);
 
 // 测试模块
 public:

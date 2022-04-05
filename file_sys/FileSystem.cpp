@@ -240,6 +240,18 @@ void FileSystem::addNode(FCB* curNode, FCB* newNode)
     
 }
 
+FCB* FileSystem::findFile(FCB* curNode, const string& name)
+{
+    auto tem = curNode->child;
+    while(tem != nullptr) {
+        if(tem->name == name) {
+            return tem;
+        }
+        tem = tem->sibling;
+    }
+    return nullptr;
+}
+
 void FileSystem::Tree(FCB* cur, int depth)
 {
     if(cur != nullptr) {
@@ -315,6 +327,34 @@ void FileSystem::Mkdir(const string& dirName)
     this->addNode(temFcb,tnode);
 }
 
+void FileSystem::Rm(const string& fileName)
+{
+    //判断当前目录是否存在该文件
+    if(this->isExistFile(fileName) == false && this->isExistDir(fileName) == false) {
+        cout << "no such file:" << fileName << endl;
+        return;
+    }
+    auto tem = this->curFCB;
+    //查找待删除文件节点
+    auto del_file = this->findFile(tem,fileName);
+    //拒绝删除文件目录 后期添加
+    if(del_file == nullptr || del_file->type == DIR_TYPE) {
+        cout << "del dir error" << endl;
+        return;
+    }
+    auto par_node = del_file->parent;
+    auto sib_node = del_file->sibling;
+    par_node->sibling = sib_node;
+    if(sib_node != nullptr) {
+        sib_node->parent = par_node;
+    }
+    //warn : 在内存删除文件
+    if(del_file){
+        delete del_file;
+        del_file = nullptr;
+    }
+}
+
 
 void FileSystem::preOrder(FCB* cur)
 {
@@ -360,4 +400,12 @@ void FileSystem::test()
     cout << "tree 根目录" << endl;
     Tree(root,0);
     cout << endl << "---------------------------" << endl; 
+    cout << "rm " << "user2" << endl;
+    Rm("user2");
+    cout << "rm " << "hello.cpp" << endl;
+    Rm("hello.cpp");
+    cout << endl << "---------------------------" << endl;   
+    cout << "tree 根目录" << endl;
+    Tree(root,0);
+    cout << endl << "---------------------------" << endl;
 }
