@@ -13,6 +13,7 @@ FileSystem::~FileSystem()
 
 void FileSystem::init()
 {
+    // cout << "init begin" << endl;
     fstream tree;
     tree.open(TreeFileName);
     if(!tree.is_open()) {
@@ -22,9 +23,12 @@ void FileSystem::init()
 
     int rnum;
     string rname;
-    tree >> rnum >> rname;
+    int rtype;
+    tree >> rnum >> rname >> rtype;
     root = new FCB(rname);
+    root->type = char(rtype+'0');
     root->setParent(nullptr);
+    cout << "root init" << endl;
     //层序遍历使用队列
     queue<FCB*> myQueue;
     myQueue.push(root);
@@ -36,6 +40,7 @@ void FileSystem::init()
         }
         auto cur = myQueue.front();
         myQueue.pop();
+        // cout << cur->name << " " << cur->type << endl;
         //准备cur的儿子和兄弟
         FCB* fcb_child = nullptr;
         FCB* fcb_simbling = nullptr;
@@ -47,8 +52,13 @@ void FileSystem::init()
             string filename;
             tree >> filename;
             fcb_child = new FCB(filename);
-            myQueue.push(fcb_child);
+            //初始化其他信息
+            int type;
+            tree >> type;
+            fcb_child->type = (char)(type+'0');
             fcb_child->parent = cur;
+
+            myQueue.push(fcb_child);
         }
         //兄弟
         tree >> num;
@@ -56,13 +66,20 @@ void FileSystem::init()
             string filename;
             tree >> filename;
             fcb_simbling = new FCB(filename);
-            myQueue.push(fcb_simbling);
+            //初始化其他信息
+            int type;
+            tree >> type;
+            fcb_simbling->type = (char)(type+'0');
             fcb_simbling->parent = cur;
+
+            myQueue.push(fcb_simbling);
         }
         //入栈
         cur->setChild(fcb_child);
         cur->setSibling(fcb_simbling);
     }
+    tree.close();
+    // cout << "init ok" << endl;
 }
 
 void FileSystem::showTree()
@@ -151,6 +168,9 @@ void FileSystem::updateTreeFile()
         }
         fc << temInfo << endl;
     }
+
+    //关闭文件
+    fc.close();
 }
 
 string FileSystem::num2string(int num)
@@ -163,6 +183,61 @@ string FileSystem::num2string(int num)
     reverse(ret.begin(), ret.end());
     // cout << "ret:" << ret << endl;
     return ret;
+}
+
+bool FileSystem::isExistFile(const string& filename)
+{
+    auto tem = this->curFCB->child;
+    //左孩子右子
+    while(tem != nullptr) {
+        if(tem->isFile() && filename == tem->name) {
+            return true;
+        }
+        tem = tem->sibling;
+    }
+    return false;
+}
+
+bool FileSystem::isExistDir(const string& dirname)
+{
+    auto tem = this->curFCB->child;
+    //左孩子右子
+    while(tem != nullptr) {
+        if(tem->isDir() && dirname == tem->name) {
+            return true;
+        }
+        tem = tem->sibling;
+    }
+    return false;
+}
+
+void FileSystem::addNode(FCB* curNode, FCB* newNode)
+{
+    auto LNode = curNode->child;
+    //直接把newNode 放在 curNode的左子上即可
+    curNode->child = newNode;
+    newNode->parent = curNode;
+    newNode->sibling = LNode;
+    if(LNode != nullptr) {
+        LNode->parent = newNode;
+    }
+
+    // auto LNode = curNode->child;
+    // //左树为空,直接将newNode放在curNode的左子
+    // if(LNode == nullptr) {
+    //     curNode->child = newNode;
+    //     newNode->parent = curNode;
+    //     return;
+    // }
+    // auto LRNode = LNode->sibling;
+    // //左树不为空 LRNode为空 newNode 放在LNode的右子
+    // if(LRNode == nullptr) {
+    //     LNode->sibling = newNode;
+    //     newNode->parent = LNode;
+    //     return;
+    // }
+    // //都不为空 将newNode插入到 LNode 和 LRNode之间
+    
 }
 
 void FileSystem::Tree(FCB* cur, int depth)
@@ -209,14 +284,36 @@ void FileSystem::Pwd(FCB* cur)
     cout << endl;
 }
 
+void FileSystem::Touch(const string& fileName,int size)
+{
+    //判断当前目录是否存在该文件
+    if(this->isExistFile(fileName)) {
+        cout << "touch failed;" << fileName << " Existed" << endl;
+        return;
+    }
+    auto temFcb = this->curFCB;
+    //创建新节点
+    FCB* tnode = new FCB(fileName);
+    tnode->size = size;
+    tnode->type = FILE_TYPE;
+    //将新节点放在左树的右子
+    this->addNode(temFcb,tnode);
+}
 
-
-
-
-
-
-
-
+void FileSystem::Mkdir(const string& dirName)
+{
+    //判断当前目录是否存在该目录
+    if(this->isExistDir(dirName)) {
+        cout << "dir:" << dirName << " has existed" << endl;
+        return;
+    }
+    auto temFcb = this->curFCB;
+    //创建新节点
+    FCB* tnode = new FCB(dirName);
+    tnode->type = DIR_TYPE;
+    //将新节点放在左树的右子
+    this->addNode(temFcb,tnode);
+}
 
 
 void FileSystem::preOrder(FCB* cur)
@@ -244,7 +341,23 @@ void FileSystem::test()
     cout << "file:" << pwd_fcb->name << endl;
     Pwd(pwd_fcb);
     cout << endl << "---------------------------" << endl;    
-    cout << "写入 目录" << endl;
+    cout << "写入 目录文件" << endl;
     updateTreeFile();
-    cout << endl << "---------------------------" << endl;    
+    cout << endl << "---------------------------" << endl; 
+    cout << "touch 在 " << curFCB->name << " 添加文件节点" << "hello.cpp" << endl;
+    Touch("hello.cpp",5);
+    cout << "再次创建hello.cpp" << endl;
+    Touch("hello.cpp",5);
+    cout << endl << "---------------------------" << endl;   
+    cout << "tree 根目录" << endl;
+    Tree(root,0);
+    cout << endl << "---------------------------" << endl; 
+    cout << "mkdir 在 " << curFCB->name << " 添加目录节点" << "user2" << endl;
+    Mkdir("user2");
+    cout << "再次创建user2" << endl;
+    Mkdir("user2");
+    cout << endl << "---------------------------" << endl;   
+    cout << "tree 根目录" << endl;
+    Tree(root,0);
+    cout << endl << "---------------------------" << endl; 
 }

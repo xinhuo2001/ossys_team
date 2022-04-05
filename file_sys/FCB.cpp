@@ -15,6 +15,7 @@ FCB::FCB(const string& name)
     this->name = name;
     this->child = nullptr;
     this->sibling = nullptr;
+    this->parent = nullptr;
 }
 
 void FCB::showSelf()
@@ -37,4 +38,13 @@ void FCB::setChild(FCB* child)
 void FCB::setSibling(FCB* sibling)
 {
     this->sibling = sibling;
+}
+
+bool FCB::isFile()
+{
+    return this->type == FILE_TYPE;
+}
+bool FCB::isDir()
+{
+    return this->type == DIR_TYPE;
 }
