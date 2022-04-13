@@ -1,7 +1,7 @@
 #include "FCB.h"
 #include<fstream>
+#include<sstream>
 #include<queue>
-#include<algorithm>
 
 // static const string TreeFileName = "tree2.txt";
 static const string TreeFileName = "tree.txt";
@@ -17,6 +17,8 @@ public:
 
     //读取默认目录文件
     void init();
+    //新的读取目录文件函数
+    void init2();
     //打印目录信息
     void showTree();
 
@@ -34,6 +36,8 @@ public:
     void addNode(FCB* curNode, FCB* newNode);
     //在当前目录寻找某文件
     FCB* findFile(FCB* curNode, const string& name);
+    //构造FCB块
+    bool generateFCB(const string& line, FCB*& gfcb);
 // 功能模块
 public:
     //实现tree功能 先序遍历 展示cur树的情况
@@ -48,7 +52,10 @@ public:
     void Mkdir(const string& dirName);
     //删除文件
     void Rm(const string& fileName);
-
+    //带权限的ls
+    void Ls_l(FCB* cur);
+    //修改权限命令 chmod xxx file
+    void Chmod(int LimitNum, string fileName);
 // 测试模块
 public:
     void preOrder(FCB* cur);

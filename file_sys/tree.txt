@@ -1,17 +1,17 @@
-1 root 0
-2 bin 0
+1 root 0 666
+2 bin 0 666
 0 
-5 a.sh 1
-3 user 0
+5 a.sh 1 777
+3 user 0 777
 0 
 6 b.sh 1
-7 Desktop 0
-4 user1 0
+7 Desktop 0 777
+4 user1 0 777
 0
 0
 0
 0
-8 Document 0
+8 Document 0 666
 0
 0
 0

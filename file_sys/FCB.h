@@ -1,5 +1,6 @@
 #include<iostream>
 #include<vector>
+#include<algorithm>
 using namespace std;
 
 //定义文件类型
@@ -19,16 +20,26 @@ public:
 	
 	int size;//占据内存大小
 	vector<int> location; //文件的存储位置
-	bool rwx[3]; //后期权限控制
+	int rwx; //后期权限控制
 public:
     FCB(char type, const string& name, int size, FCB* parent, FCB* child, FCB* sibling);
 	FCB(const string& name);
 	//展示模块信息
 	void showSelf();
+	//详细展示模块
+	void showSelf_l();
+//set函数
 public:
 	void setParent(FCB* parent);
 	void setChild(FCB* child);
 	void setSibling(FCB* sibling);
+	void setRWX(int num);
+//辅助模块
+public:
+	string getRWX();
+	string num2RWX(int num);
+	//分类文件和目录打印名字
+	string showName();
 //确认类型模块
 public:
 	bool isFile();
