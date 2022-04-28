@@ -322,12 +322,19 @@ bool FileSystem::generateFCB(const string& line, FCB*& gfcb)
     string fname;
     int ftype;
     int flimit;
+    string uname;
 
     //读入文件参数
-    i_line >> fname >> ftype >> flimit;
+    i_line >> fname >> ftype >> flimit >> uname;
     gfcb = new FCB(fname);
     gfcb->type = ftype + '0';
     gfcb->rwx = flimit;
+    gfcb->uname = uname;
+    return true;
+}
+
+bool FileSystem::isPermitRead(const string& curUser, FCB* pfcb)
+{
     return true;
 }
 
@@ -388,6 +395,7 @@ void FileSystem::Touch(const string& fileName,int size)
     FCB* tnode = new FCB(fileName);
     tnode->size = size;
     tnode->type = FILE_TYPE;
+    tnode->uname = this->curUser;
     //将新节点放在左树的右子
     this->addNode(temFcb,tnode);
 }
@@ -403,6 +411,7 @@ void FileSystem::Mkdir(const string& dirName)
     //创建新节点
     FCB* tnode = new FCB(dirName);
     tnode->type = DIR_TYPE;
+    tnode->uname = this->curUser;
     //将新节点放在左树的右子
     this->addNode(temFcb,tnode);
 }
@@ -453,6 +462,29 @@ void FileSystem::Chmod(int LimitNum, string fileName)
     }
     auto ffcb = this->findFile(this->curFCB,fileName);
     ffcb->setRWX(LimitNum);
+}
+
+void FileSystem::ReadFile(const string& fileName)
+{
+
+}
+
+void FileSystem::Cd(const string& dirName)
+{
+    //没有这个目录
+    if(this->isExistDir(dirName) == false) {
+        cout << "warn:No Such Dir" << endl;
+        return;
+    }
+    //添加权限确定
+    FCB* pfcb = this->findFile(curFCB, dirName);
+    //无相应权限
+    if(this->isPermitRead(dirName,pfcb) == false) {
+        cout << "warn:premission denying" << endl;
+        return;
+    }
+    //切换目录
+    this->curFCB = pfcb;
 }
 
 void FileSystem::preOrder(FCB* cur)
@@ -518,4 +550,14 @@ void FileSystem::test()
     cout << "ls -l 命令" << endl;
     Ls_l(root);
     cout << endl << "---------------------------" << endl;
+}
+
+void FileSystem::test2()
+{
+    this->Ls_l(this->curFCB);
+    this->Cd("bin");
+    cout << endl;
+    this->Ls_l(this->curFCB);
+    cout << endl;
+    this->Cd("bin");
 }

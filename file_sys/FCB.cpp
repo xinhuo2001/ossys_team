@@ -41,7 +41,10 @@ void FCB::showSelf_l()
     }
     ret += this->getRWX();
     ret += '\t';
+    ret += this->uname;
+    ret += '\t';
     ret += showName();
+
     cout << ret << endl;
 }
 

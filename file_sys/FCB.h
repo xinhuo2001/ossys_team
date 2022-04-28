@@ -21,6 +21,8 @@ public:
 	int size;//占据内存大小
 	vector<int> location; //文件的存储位置
 	int rwx; //后期权限控制
+
+	string uname; //文件所属用户
 public:
     FCB(char type, const string& name, int size, FCB* parent, FCB* child, FCB* sibling);
 	FCB(const string& name);
