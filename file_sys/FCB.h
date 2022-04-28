@@ -19,7 +19,12 @@ public:
 	FCB* sibling;
 	
 	int size;//占据内存大小
+
+	int locationLen = 0; //存储向量长度
 	vector<int> location; //文件的存储位置
+	int beginByte = 0; //文件起始块位置
+	int endByte = 0; //文件结束块位置
+
 	int rwx; //后期权限控制
 
 	string uname; //文件所属用户

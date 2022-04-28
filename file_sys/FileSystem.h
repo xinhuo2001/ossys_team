@@ -39,8 +39,10 @@ public:
     FCB* findFile(FCB* curNode, const string& name);
     //构造FCB块
     bool generateFCB(const string& line, FCB*& gfcb);
-    //确定权限
+    //确定读权限
     bool isPermitRead(const string& curUser, FCB* pfcb);
+    //确定写权限
+    bool isPermitWrite(const string& curUser, FCB* pfcb);
 // 功能模块
 public:
     //实现tree功能 先序遍历 展示cur树的情况
@@ -63,6 +65,8 @@ public:
     void ReadFile(const string& fileName);
     //切换目录
     void Cd(const string& dirName);
+    //重写某个文件
+    void ViFile(const string& fileName);
 // 测试模块
 public:
     void preOrder(FCB* cur);

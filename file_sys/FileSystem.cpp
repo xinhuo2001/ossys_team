@@ -330,10 +330,28 @@ bool FileSystem::generateFCB(const string& line, FCB*& gfcb)
     gfcb->type = ftype + '0';
     gfcb->rwx = flimit;
     gfcb->uname = uname;
+
+    //读入文件内存部分
+    if(gfcb->isFile()) {
+        i_line >> gfcb->locationLen;
+        //读入内存块向量
+        for(int i = 0; i < gfcb->locationLen; i++) {
+            int vtem;
+            i_line >> vtem;
+            gfcb->location.push_back(vtem);
+        }
+        i_line >> gfcb->beginByte;
+        i_line >> gfcb->endByte;
+    }
     return true;
 }
 
 bool FileSystem::isPermitRead(const string& curUser, FCB* pfcb)
+{
+    return true;
+}
+
+bool FileSystem::isPermitWrite(const string& curUser, FCB* pfcb)
 {
     return true;
 }
@@ -466,6 +484,31 @@ void FileSystem::Chmod(int LimitNum, string fileName)
 
 void FileSystem::ReadFile(const string& fileName)
 {
+    if(this->isExistFile(fileName) == false) {
+        cout << "warn:no such file" << endl;
+        return;
+    }
+
+    //读取文件
+    FCB* rfcb = this->findFile(this->curFCB,fileName);
+    //无相应权限
+    if(this->isPermitRead(fileName,rfcb) == false) {
+        cout << "warn:premission denying" << endl;
+        return;
+    }
+
+    //内存位置
+    cout << "准备读入如下内容" << endl;
+    cout << "帧块共计:" << rfcb->locationLen << endl;
+    cout << "帧块编号如下:" << endl;
+    for(int i = 0; i < rfcb->locationLen; i++) {
+        cout << rfcb->location[i] << " ";
+    }
+    cout << endl;
+    cout << "起始块起点:" << rfcb->beginByte << endl;
+    cout << "结束块终点:" << rfcb->endByte << endl;
+
+    //这里请求对应帧内容 并显示出来
 
 }
 
@@ -485,6 +528,41 @@ void FileSystem::Cd(const string& dirName)
     }
     //切换目录
     this->curFCB = pfcb;
+}
+
+void FileSystem::ViFile(const string& fileName)
+{
+    if(this->isExistFile(fileName) == false) {
+        cout << "warn:no such file" << endl;
+        return;
+    }
+
+    //读取文件
+    FCB* rfcb = this->findFile(this->curFCB,fileName);
+    //无相应权限
+    if(this->isPermitWrite(fileName,rfcb) == false) {
+        cout << "warn:premission denying" << endl;
+        return;
+    }
+    //准备写入
+    //释放相应 内存位置
+    cout << "申请内存释放如下内容" << endl;
+    cout << "帧块共计:" << rfcb->locationLen << endl;
+    cout << "帧块编号如下:" << endl;
+    for(int i = 0; i < rfcb->locationLen; i++) {
+        cout << rfcb->location[i] << " ";
+    }
+    cout << endl;
+    cout << "起始块起点:" << rfcb->beginByte << endl;
+    cout << "结束块终点:" << rfcb->endByte << endl;
+
+    //接收键盘输入
+
+    //申请内存
+
+    //传送相应字符给内存
+
+    //成功写入
 }
 
 void FileSystem::preOrder(FCB* cur)
@@ -554,10 +632,13 @@ void FileSystem::test()
 
 void FileSystem::test2()
 {
-    this->Ls_l(this->curFCB);
-    this->Cd("bin");
-    cout << endl;
-    this->Ls_l(this->curFCB);
-    cout << endl;
-    this->Cd("bin");
+    this->Ls_l(this->curFCB);   cout << endl;
+
+    this->Cd("bin");    
+    
+    this->Ls_l(this->curFCB);   cout << endl; 
+
+    this->ReadFile("a.sh");     cout << endl;
+
+    this->ViFile("a.sh");       cout << endl;
 }
