@@ -1,9 +1,12 @@
 #include "FileSystem.h"
+#include<vector>
+#include <iostream>
+#include<fstream>
+#include "FCB.h"
 
 FileSystem::FileSystem()
 {
-    // init();
-    init2();
+    init();
     this->curFCB = root;
 }
 
@@ -81,63 +84,6 @@ void FileSystem::init()
     }
     tree.close();
     // cout << "init ok" << endl;
-}
-
-void FileSystem::init2()
-{
-    // cout << "init begin" << endl;
-    fstream tree;
-    tree.open(TreeFileName);
-    if(!tree.is_open()) {
-        cout << "open " << TreeFileName << " fail" << endl;
-        exit(-1);
-    }
-
-    //初始化根
-    string line;
-    getline(tree,line);
-    this->generateFCB(line,root);
-
-    //层序遍历使用队列
-    queue<FCB*> myQueue;
-    myQueue.push(root);
-    while(!tree.eof()) {
-        //获取队列头
-        if(myQueue.empty()) {
-            cout << "queue error" << endl;
-            exit(-1);
-        }
-        auto cur = myQueue.front();
-        myQueue.pop();
-
-        //准备cur的儿子和兄弟
-        FCB* fcb_child = nullptr;
-        FCB* fcb_simbling = nullptr;
-
-        //儿子
-        getline(tree,line);
-        bool child_ret = this->generateFCB(line,fcb_child);
-        if(child_ret) {
-            //儿子不为空
-            fcb_child->parent = cur;
-            myQueue.push(fcb_child);
-        }
-
-
-        //兄弟
-        getline(tree,line);
-        bool simbling_ret = this->generateFCB(line,fcb_simbling);
-        if(simbling_ret) {
-            //兄弟不为空
-            fcb_simbling->parent = cur;
-            myQueue.push(fcb_simbling);
-        }
-
-        //入栈
-        cur->setChild(fcb_child);
-        cur->setSibling(fcb_simbling);
-    }
-    tree.close();
 }
 
 void FileSystem::showTree()
@@ -298,68 +244,10 @@ void FileSystem::addNode(FCB* curNode, FCB* newNode)
     
 }
 
-FCB* FileSystem::findFile(FCB* curNode, const string& name)
-{
-    auto tem = curNode->child;
-    while(tem != nullptr) {
-        if(tem->name == name) {
-            return tem;
-        }
-        tem = tem->sibling;
-    }
-    return nullptr;
-}
-
-bool FileSystem::generateFCB(const string& line, FCB*& gfcb)
-{
-    int flag;
-    istringstream i_line(line);
-    i_line >> flag;
-    if(flag == 0) {
-        return false;
-    }
-    //文件的各项参数
-    string fname;
-    int ftype;
-    int flimit;
-    string uname;
-
-    //读入文件参数
-    i_line >> fname >> ftype >> flimit >> uname;
-    gfcb = new FCB(fname);
-    gfcb->type = ftype + '0';
-    gfcb->rwx = flimit;
-    gfcb->uname = uname;
-
-    //读入文件内存部分
-    if(gfcb->isFile()) {
-        i_line >> gfcb->locationLen;
-        //读入内存块向量
-        for(int i = 0; i < gfcb->locationLen; i++) {
-            int vtem;
-            i_line >> vtem;
-            gfcb->location.push_back(vtem);
-        }
-        i_line >> gfcb->beginByte;
-        i_line >> gfcb->endByte;
-    }
-    return true;
-}
-
-bool FileSystem::isPermitRead(const string& curUser, FCB* pfcb)
-{
-    return true;
-}
-
-bool FileSystem::isPermitWrite(const string& curUser, FCB* pfcb)
-{
-    return true;
-}
-
-TreeNode* FileSystem::matchPath(const string path)//在树 dirTree 上找一条path，返回末尾的节点
+TreeNode*& FileSystem::matchPath(const string path)//在树 dirTree 上找一条path，返回末尾的节点
 {
     vector<string> res = split(path, "/");
-    TreeNode* temp = this->root;
+    TreeNode* temp = dirTree;
     TreeNode* lastptr = nullptr;
 
     int i;
@@ -390,7 +278,7 @@ TreeNode* FileSystem::matchPath(const string path)//在树 dirTree 上找一条p
     {
         cout << "路径匹配成功！" << endl;
         if (lastptr == nullptr)
-            return this->root;
+            return dirTree;
         else if (lastptr->child == temp)
             return lastptr->child;
         else
@@ -404,7 +292,7 @@ TreeNode* FileSystem::matchPath(const string path)//在树 dirTree 上找一条p
 }
 
 
-void FileSystem::postOrderDelSubTree(TreeNodePtr &t)//后序遍历删除文件子树
+void FileSystem::postOrderDelSubTree(Tree &t)//后序遍历删除文件子树
 {
     if (t == nullptr)
         return;
@@ -420,11 +308,11 @@ void FileSystem::postOrderDelSubTree(TreeNodePtr &t)//后序遍历删除文件�
 
 int FileSystem::releaseExternalStorage(FCB& fcb)//给一个文件或文件夹释放数据块
 {
-    // int size = fcb.size;
-    // freeSpaceList.insert(freeSpaceList.end(),fcb.location.begin(),fcb.location.end());
-    // fcb.location.erase(fcb.location.begin(), fcb.location.end());
-    // utiliRate = 100*(STORAGE_SIZE - freeSpaceList.size()) / STORAGE_SIZE;
-    // return 0;
+    int size = fcb.size;
+    freeSpaceList.insert(freeSpaceList.end(),fcb.location.begin(),fcb.location.end());
+    fcb.location.erase(fcb.location.begin(), fcb.location.end());
+    utiliRate = 100*(STORAGE_SIZE - freeSpaceList.size()) / STORAGE_SIZE;
+    return 0;
 }
 
 vector<string> FileSystem::split(const string& str, const string& delim)//字符串切片
@@ -434,20 +322,20 @@ vector<string> FileSystem::split(const string& str, const string& delim)//字符
     //先将要切割的字符串从string类型转换为char*类型  
     int len1 = str.length() + 1;//要加上一个\0
     char* strs = new char[len1]; 
-    strcpy(strs,str.c_str());
+    strcpy_s(strs,len1, str.c_str());
 
     int len2 = delim.length() + 1;
     char* d = new char[len2];
-    strcpy(d,delim.c_str());
+    strcpy_s(d, len2,delim.c_str());
 
     char* buf=NULL;
-    char* p = strtok_r(strs, d,&buf);
+    char* p = strtok_s(strs, d,&buf);
 
     while (p)
     {
         string s = p; //分割得到的字符串转换为string类型  
         res.push_back(s); //存入结果数组  
-        p = strtok_r(NULL, d,&buf);
+        p = strtok_s(NULL, d,&buf);
     }
 
     delete [] strs;
@@ -463,7 +351,6 @@ vector<string> FileSystem::split(const string& str, const string& delim)//字符
 }
 
 
-
 void FileSystem::Tree(FCB* cur, int depth)
 {
     if(cur != nullptr) {
@@ -474,7 +361,7 @@ void FileSystem::Tree(FCB* cur, int depth)
                 cout << "        ";
             }
         }
-        cout << cur->showName() << endl;
+        cout << cur->name << endl;
         Tree(cur->child,depth+1);
         Tree(cur->sibling,depth);
     }
@@ -493,7 +380,6 @@ void FileSystem::Ls(FCB* cur)
 void FileSystem::Pwd(FCB* cur)
 {
     vector<string> path;
-    path.push_back(cur->name);
     auto tem = cur;
     //找到长子 即自己是父亲的左子
     while(tem != nullptr && tem->parent != nullptr) {
@@ -521,7 +407,6 @@ void FileSystem::Touch(const string& fileName,int size)
     FCB* tnode = new FCB(fileName);
     tnode->size = size;
     tnode->type = FILE_TYPE;
-    tnode->uname = this->curUser;
     //将新节点放在左树的右子
     this->addNode(temFcb,tnode);
 }
@@ -537,155 +422,24 @@ void FileSystem::Mkdir(const string& dirName)
     //创建新节点
     FCB* tnode = new FCB(dirName);
     tnode->type = DIR_TYPE;
-    tnode->uname = this->curUser;
     //将新节点放在左树的右子
     this->addNode(temFcb,tnode);
 }
 
-void FileSystem::Rm(const string& fileName)
+void FileSystem::Rm(const string path)
 {
-    //判断当前目录是否存在该文件
-    if(this->isExistFile(fileName) == false && this->isExistDir(fileName) == false) {
-        cout << "no such file:" << fileName << endl;
-        return;
+ 	TreeNode*& pnode = matchPath(path);
+    if (pnode == nullptr)
+    {
+        cout << "删除节点失败，该路径不存在" << endl;
     }
-    auto tem = this->curFCB;
-    //查找待删除文件节点
-    auto del_file = this->findFile(tem,fileName);
-    //拒绝删除文件目录 后期添加
-    if(del_file == nullptr || del_file->type == DIR_TYPE) {
-        cout << "del dir error" << endl;
-        return;
-    }
-    auto par_node = del_file->parent;
-    auto sib_node = del_file->sibling;
-    par_node->sibling = sib_node;
-    if(sib_node != nullptr) {
-        sib_node->parent = par_node;
-    }
-    //warn : 在内存删除文件
-    if(del_file){
-        delete del_file;
-        del_file = nullptr;
+    else
+    {
+        postOrderDelSubTree(pnode);
+        cout << "删除成功！" << endl;
     }
 }
 
-// void FileSystem::Rm(const string path)
-// {
-//  	TreeNode*& pnode = matchPath(path);
-//     if (pnode == nullptr)
-//     {
-//         cout << "删除节点失败，该路径不存在" << endl;
-//     }
-//     else
-//     {
-//         postOrderDelSubTree(pnode);
-//         cout << "删除成功！" << endl;
-//     }
-// }
-
-void FileSystem::Ls_l(FCB* cur)
-{
-    //展示cur的左子和左子的右子(递进)
-    auto tem = cur->child;
-    while(tem != nullptr) {
-        tem->showSelf_l();
-        tem = tem->sibling;
-    }
-}
-
-void FileSystem::Chmod(int LimitNum, string fileName)
-{
-    //不存在该文件或目录
-    if(this->isExistDir(fileName) == false && this->isExistFile(fileName) == false) {
-        return;
-    }
-    auto ffcb = this->findFile(this->curFCB,fileName);
-    ffcb->setRWX(LimitNum);
-}
-
-void FileSystem::ReadFile(const string& fileName)
-{
-    if(this->isExistFile(fileName) == false) {
-        cout << "warn:no such file" << endl;
-        return;
-    }
-
-    //读取文件
-    FCB* rfcb = this->findFile(this->curFCB,fileName);
-    //无相应权限
-    if(this->isPermitRead(fileName,rfcb) == false) {
-        cout << "warn:premission denying" << endl;
-        return;
-    }
-
-    //内存位置
-    cout << "准备读入如下内容" << endl;
-    cout << "帧块共计:" << rfcb->locationLen << endl;
-    cout << "帧块编号如下:" << endl;
-    for(int i = 0; i < rfcb->locationLen; i++) {
-        cout << rfcb->location[i] << " ";
-    }
-    cout << endl;
-    cout << "起始块起点:" << rfcb->beginByte << endl;
-    cout << "结束块终点:" << rfcb->endByte << endl;
-
-    //这里请求对应帧内容 并显示出来
-
-}
-
-void FileSystem::Cd(const string& dirName)
-{
-    //没有这个目录
-    if(this->isExistDir(dirName) == false) {
-        cout << "warn:No Such Dir" << endl;
-        return;
-    }
-    //添加权限确定
-    FCB* pfcb = this->findFile(curFCB, dirName);
-    //无相应权限
-    if(this->isPermitRead(dirName,pfcb) == false) {
-        cout << "warn:premission denying" << endl;
-        return;
-    }
-    //切换目录
-    this->curFCB = pfcb;
-}
-
-void FileSystem::ViFile(const string& fileName)
-{
-    if(this->isExistFile(fileName) == false) {
-        cout << "warn:no such file" << endl;
-        return;
-    }
-
-    //读取文件
-    FCB* rfcb = this->findFile(this->curFCB,fileName);
-    //无相应权限
-    if(this->isPermitWrite(fileName,rfcb) == false) {
-        cout << "warn:premission denying" << endl;
-        return;
-    }
-    //准备写入
-    //释放相应 内存位置
-    cout << "申请内存释放如下内容" << endl;
-    cout << "帧块共计:" << rfcb->locationLen << endl;
-    cout << "帧块编号如下:" << endl;
-    for(int i = 0; i < rfcb->locationLen; i++) {
-        cout << rfcb->location[i] << " ";
-    }
-    cout << endl;
-    cout << "起始块起点:" << rfcb->beginByte << endl;
-    cout << "结束块终点:" << rfcb->endByte << endl;
-
-    //接收键盘输入
-
-    //申请内存
-
-    //传送相应字符给内存
-
-    //成功写入
-}
 
 void FileSystem::preOrder(FCB* cur)
 {
@@ -739,38 +493,4 @@ void FileSystem::test()
     cout << "tree 根目录" << endl;
     Tree(root,0);
     cout << endl << "---------------------------" << endl;
-    cout << "touch hello.cpp" << endl;
-    Touch("hello.cpp",5);
-    cout << "ls -l 命令" << endl;
-    Ls_l(root);
-    cout << endl << "---------------------------" << endl;
-    cout << "chmod 776 hello.cpp" << endl;
-    Chmod(776,"hello.cpp");
-    cout << endl << "---------------------------" << endl;
-    cout << "ls -l 命令" << endl;
-    Ls_l(root);
-    cout << endl << "---------------------------" << endl;
-}
-
-void FileSystem::test2()
-{
-    this->Ls_l(this->curFCB);   cout << endl;
-
-    this->Cd("bin");    
-    
-    this->Ls_l(this->curFCB);   cout << endl; 
-
-    this->ReadFile("a.sh");     cout << endl;
-
-    this->ViFile("a.sh");       cout << endl;
-}
-
-void FileSystem::test3()
-{
-    Tree(root,0);
-    Cd("bin");
-    Tree(this->curFCB,0);
-    // Rm("a.sh");
-    cout << endl;
-    Tree(root,0);
 }

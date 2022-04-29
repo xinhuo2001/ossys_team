@@ -1,9 +1,8 @@
 #include "FCB.h"
 #include<fstream>
-#include<sstream>
 #include<queue>
-#include<string.h>
-#include<cstring>
+#include<vector>
+#include<algorithm>
 
 // static const string TreeFileName = "tree2.txt";
 static const string TreeFileName = "tree.txt";
@@ -13,15 +12,12 @@ class FileSystem
 private:
     FCB * root;
     FCB * curFCB;
-    string curUser = "rock";
 public:
     FileSystem();
     ~FileSystem();
 
     //读取默认目录文件
     void init();
-    //新的读取目录文件函数
-    void init2();
     //打印目录信息
     void showTree();
 
@@ -37,22 +33,15 @@ public:
     bool isExistDir(const string& dirname);
     //在当前目录下添加节点
     void addNode(FCB* curNode, FCB* newNode);
-    //在当前目录寻找某文件
-    FCB* findFile(FCB* curNode, const string& name);
-    //构造FCB块
-    bool generateFCB(const string& line, FCB*& gfcb);
-    //确定读权限
-    bool isPermitRead(const string& curUser, FCB* pfcb);
-    //确定写权限
-    bool isPermitWrite(const string& curUser, FCB* pfcb);
-    //在树 dirTree 上找一条path，返回末尾的节点
-    TreeNode* matchPath(string path);
+ 	//在树 dirTree 上找一条path，返回末尾的节点
+    TreeNode*& FileSystem::matchPath(string path);
     //后序遍历删除文件子树
-    void postOrderDelSubTree(TreeNodePtr &t);
+    void FileSystem::postOrderDelSubTree(Tree &t);
     //给一个文件或文件夹释放数据块
-    int releaseExternalStorage(FCB& fcb);
+    int FileSystem::releaseExternalStorage(FCB& fcb);
     //字符串切片
-    vector<string> split(const string& str, const string& delim);
+    vector<string> FileSystem::split(const string& str, const string& delim);
+    
 // 功能模块
 public:
     //实现tree功能 先序遍历 展示cur树的情况
@@ -65,25 +54,11 @@ public:
     void Touch(const string& fileName,int size);
     //在当前目录创建目录
     void Mkdir(const string& dirName);
-    //删除文件
-    void Rm(const string& fileName);
-    // void Rm(const string path);
-    //带权限的ls
-    void Ls_l(FCB* cur);
-    //修改权限命令 chmod xxx file
-    void Chmod(int LimitNum, string fileName);
-    //读取文件模块
-    void ReadFile(const string& fileName);
-    //切换目录
-    void Cd(const string& dirName);
-    //重写某个文件
-    void ViFile(const string& fileName);
+    //删除文件及路径
+    void Rm(const string path);
+
 // 测试模块
 public:
     void preOrder(FCB* cur);
     void test();
-    //0428添加
-    void test2();
-    //0429
-    void test3();
 };
