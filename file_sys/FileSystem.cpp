@@ -462,9 +462,7 @@ vector<string> FileSystem::split(const string& str, const string& delim)//字符
     return res;
 }
 
-
-
-void FileSystem::Tree(FCB* cur, int depth)
+void FileSystem::TreeChild(FCB* cur, int depth)
 {
     if(cur != nullptr) {
         for(int j = 0; j < depth; j++) {
@@ -475,9 +473,29 @@ void FileSystem::Tree(FCB* cur, int depth)
             }
         }
         cout << cur->showName() << endl;
-        Tree(cur->child,depth+1);
-        Tree(cur->sibling,depth);
+        TreeChild(cur->child,depth+1);
+        TreeChild(cur->sibling,depth);
     }
+}
+
+int FileSystem::getCurDepth(FCB* cur)
+{
+    int depth = 0;
+    while(cur != nullptr && cur->parent != nullptr) {
+        //为左子层数+1
+        if(cur->parent->child == cur) {
+            depth++;
+        }
+        cur = cur->parent;
+    }
+    return depth;
+}
+
+void FileSystem::Tree(FCB* cur)
+{
+    cout << cur->showName() << endl;
+    // int depth = this->getCurDepth(cur);
+    TreeChild(cur->child,1);
 }
 
 void FileSystem::Ls(FCB* cur)
@@ -702,7 +720,7 @@ void FileSystem::test()
 {
     cout << endl << "---------------------------" << endl;    
     cout << "tree 根目录" << endl;
-    Tree(root,0);
+    Tree(root);
     cout << endl << "---------------------------" << endl;    
     cout << "ls 根目录" << endl;
     Ls(root);
@@ -721,7 +739,7 @@ void FileSystem::test()
     Touch("hello.cpp",5);
     cout << endl << "---------------------------" << endl;   
     cout << "tree 根目录" << endl;
-    Tree(root,0);
+    Tree(root);
     cout << endl << "---------------------------" << endl; 
     cout << "mkdir 在 " << curFCB->name << " 添加目录节点" << "user2" << endl;
     Mkdir("user2");
@@ -729,7 +747,7 @@ void FileSystem::test()
     Mkdir("user2");
     cout << endl << "---------------------------" << endl;   
     cout << "tree 根目录" << endl;
-    Tree(root,0);
+    Tree(root);
     cout << endl << "---------------------------" << endl; 
     cout << "rm " << "user2" << endl;
     Rm("user2");
@@ -737,7 +755,7 @@ void FileSystem::test()
     Rm("hello.cpp");
     cout << endl << "---------------------------" << endl;   
     cout << "tree 根目录" << endl;
-    Tree(root,0);
+    Tree(root);
     cout << endl << "---------------------------" << endl;
     cout << "touch hello.cpp" << endl;
     Touch("hello.cpp",5);
@@ -767,10 +785,13 @@ void FileSystem::test2()
 
 void FileSystem::test3()
 {
-    Tree(root,0);
+    TreeChild(curFCB,0);
+    cout << endl;
+    Tree(root);
+    cout << endl;
     Cd("bin");
-    Tree(this->curFCB,0);
+    Tree(this->curFCB);
     // Rm("a.sh");
     cout << endl;
-    Tree(root,0);
+    Tree(root);
 }

@@ -53,10 +53,14 @@ public:
     int releaseExternalStorage(FCB& fcb);
     //字符串切片
     vector<string> split(const string& str, const string& delim);
+    //Tree 补丁
+    void TreeChild(FCB* cur, int depth);
+    //获取当前节点深度
+    int getCurDepth(FCB* cur);
 // 功能模块
 public:
     //实现tree功能 先序遍历 展示cur树的情况
-    void Tree(FCB* cur, int depth);
+    void Tree(FCB* cur);
     //ls 模块 最简单实现
     void Ls(FCB* cur);
     //展示当下目录
