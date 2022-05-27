@@ -1,0 +1,19 @@
+1 root 0 666 rock   
+2 mmmmmmmm.txt 1 777 rock   
+0
+0
+5 bin 0 666 rock   
+6 a.sh 1 777 rock 3 20 21 22 10 10
+7 user 0 777 rock   
+0
+9 b.sh 1 777 rock 2 26 27 500 499
+10 Desktop 0 777 rock   
+11 user1 0 777 rock   
+0
+0
+0
+0
+16 Document 0 666 rock   
+0
+0
+0
